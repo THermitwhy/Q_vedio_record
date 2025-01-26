@@ -1,6 +1,7 @@
 #include "main_diat.h"
 #include "./ui_main_dia.h"
 #include <QMouseEvent>
+#include <QDebug>
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::Widget)
@@ -10,9 +11,16 @@ Widget::Widget(QWidget *parent)
     time_counter.setInterval(1000);
     record_vedio = new record_start();
     record_vedio->init_vedio_info(REC_INFO::vedio_with_audio,"out.mp4",30);
+    setConnect();
+    setButtonIcons(ui->rec_button,":/icon/icon/record1.png");
+    setButtonIcons(ui->set_button,":/icon/icon/setting1.png");
+    setButtonIcons(ui->mic_button,":/icon/icon/stop1.png");
+}
+void Widget::setConnect(){
     connect(&time_counter,&QTimer::timeout,this,&Widget::on_time_out);
-    connect(this->ui->rec_button,&QPushButton::clicked,this,[=](){
+    connect(this->ui->rec_button,&QPushButton::clicked,this,[&](){
         if(!rec_button_flag){
+            startTime = QTime::currentTime();
             time_counter.start();
             record_vedio->start_vedio_loop();
             rec_button_flag = true;
@@ -26,11 +34,7 @@ Widget::Widget(QWidget *parent)
 
     });
     connect(this->ui->set_button,&QPushButton::clicked,this,&Widget::show_setting_menu);
-    setButtonIcons(ui->rec_button,":/icon/icon/record1.png");
-    setButtonIcons(ui->set_button,":/icon/icon/setting1.png");
-    setButtonIcons(ui->mic_button,":/icon/icon/stop1.png");
 }
-
 Widget::~Widget()
 {
     delete ui;
@@ -64,19 +68,17 @@ void Widget::mouseReleaseEvent(QMouseEvent *event){
 }
 
 void Widget::on_time_out(){
-    time.second++;
-    if(time.second == 60){
-        time.second = 0;
-        time.minute++;
-    }
-    if(time.minute == 60){
-        time.minute =0;
-        time.time++;
+    int currentTime = this->startTime.secsTo(QTime::currentTime());
+    int hours = currentTime/3600;
+    int minutes = (currentTime % 3600) / 60;
+    int seconds = currentTime%60;
 
-    }
-    ui->time->setText(QString::number(time.time));
-    ui->minute->setText(QString::number(time.minute));
-    ui->second->setText(QString::number(time.second));
+    QString timeDiffString = QString("%1:%2:%3")
+                .arg(hours, 2, 10, QLatin1Char('0')) // 补零使小时至少两位
+                .arg(minutes, 2, 10, QLatin1Char('0')) // 补零使分钟至少两位
+                .arg(seconds, 2, 10, QLatin1Char('0')); // 补零使秒至少两位
+    std::cout<<currentTime<<std::endl;;
+    this->ui->lcdNumber->display(timeDiffString);
 }
 
 

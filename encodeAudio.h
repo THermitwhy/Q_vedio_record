@@ -140,7 +140,9 @@ private:
             if (ret < 0) {
                 return -1;
             }
+            //audio_packet->time_base = {1,48000};
             audio_packet->stream_index = this->audio_stream->index;
+            av_packet_rescale_ts(audio_packet, this->audio_codec_context->time_base, this->audio_stream->time_base);
             av_interleaved_write_frame(audio_format, audio_packet);
         }
         return 1;
@@ -150,13 +152,16 @@ private:
         int ret = avcodec_send_frame(audio_codec_context, NULL);
         while (ret >= 0) {
             ret = avcodec_receive_packet(audio_codec_context, audio_packet);
+
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
                 return -1;
             }
             if (ret < 0) {
                 return -1;
             }
+
             audio_packet->stream_index = this->audio_stream->index;
+            av_packet_rescale_ts(audio_packet, this->audio_codec_context->time_base, this->audio_stream->time_base);
             av_interleaved_write_frame(audio_format, audio_packet);
         }
         return 1;

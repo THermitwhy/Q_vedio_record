@@ -171,11 +171,13 @@ int bvedio::loop()
             av_frame_free(&current_frame);
             return -1;
         }
-
-        pkt->data = nullptr;
-        pkt->size = 0;
-        pkt->time_base = codec_ctx->time_base;
+        //av_frame_unref(current_frame);
+        //pkt->data = nullptr;
+        //pkt->size = 0;
+        //pkt->time_base = codec_ctx->time_base;
+        //av_packet_rescale_ts(pkt, this->codec_ctx->time_base, this->video_stream->time_base);
         while (avcodec_receive_packet(codec_ctx, pkt) == 0) {
+            av_packet_rescale_ts(pkt, this->codec_ctx->time_base, this->video_stream->time_base);
             //std::cout << pkt->pts << std::endl;
             int ret = av_interleaved_write_frame(format_ctx, pkt);
             if (ret  < 0) {
@@ -187,7 +189,7 @@ int bvedio::loop()
             }
             av_packet_unref(pkt);
         }
-
+        //av_packet_unref(pkt);
 
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -205,10 +207,12 @@ int bvedio::loop()
     // 从编码器接收编码数据并写入文件
     //AVPacket pkt;
     //av_init_packet(&pkt);
-    pkt->data = nullptr;
-    pkt->size = 0;
-    pkt->time_base = codec_ctx->time_base;
+    //pkt->data = nullptr;
+    //pkt->size = 0;
+    //pkt->time_base = codec_ctx->time_base;
+    //av_packet_rescale_ts(pkt, this->codec_ctx->time_base, this->video_stream->time_base);
     while (avcodec_receive_packet(codec_ctx, pkt) == 0) {
+        av_packet_rescale_ts(pkt, this->codec_ctx->time_base, this->video_stream->time_base);
         if (av_interleaved_write_frame(format_ctx, pkt) < 0) {
             //std::cerr << "无法写入编码数据到文件" << std::endl;
             throw std::runtime_error("无法写入编码数据到文件");

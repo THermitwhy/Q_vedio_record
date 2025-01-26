@@ -17,7 +17,9 @@ qt_add_resources(RESOURCES_RCC ${CMAKE_SOURCE_DIR}/icon.qrc)
 #set(TS_FILES vedio_rec_zh_CN.ts)
 
 set(PROJECT_SOURCES
+        encodeAudio.h
         utils.hpp
+        threadPool.hpp
         bvedio.h
         bvedio.cpp
         dx_capture.hpp

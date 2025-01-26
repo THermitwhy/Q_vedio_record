@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QPushButton>
 #include <QTimer>
+#include <QTime>
 #include "rec_setting.h"
 #include "vedio_record.hpp"
 QT_BEGIN_NAMESPACE
@@ -27,6 +28,7 @@ private:
     QPoint inner_pos;
     bool mouse_pressed=false;
     Ui::Widget *ui;
+    QTime startTime;
     QTimer time_counter;
     rec_setting *recsetting;
     times time{0, 0, 0};
@@ -37,6 +39,7 @@ private:
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
 
+    void setConnect();
     void on_time_out();
     void show_setting_menu();
 private slots:

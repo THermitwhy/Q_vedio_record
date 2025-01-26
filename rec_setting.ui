@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>650</width>
     <height>300</height>
    </rect>
   </property>
@@ -48,6 +48,28 @@
      </widget>
     </item>
    </layout>
+  </widget>
+  <widget class="QLCDNumber" name="lcdNumber">
+   <property name="geometry">
+    <rect>
+     <x>420</x>
+     <y>110</y>
+     <width>81</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="digitCount">
+    <number>6</number>
+   </property>
+   <property name="mode">
+    <enum>QLCDNumber::Dec</enum>
+   </property>
+   <property name="segmentStyle">
+    <enum>QLCDNumber::Flat</enum>
+   </property>
+   <property name="value" stdset="0">
+    <double>50.000000000000000</double>
+   </property>
   </widget>
  </widget>
  <resources/>
