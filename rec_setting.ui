@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>650</width>
-    <height>300</height>
+    <width>456</width>
+    <height>257</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,57 +19,40 @@
   <widget class="QWidget" name="horizontalLayoutWidget">
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>60</x>
      <y>10</y>
-     <width>361</width>
-     <height>251</height>
+     <width>291</width>
+     <height>31</height>
     </rect>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout">
-    <property name="spacing">
-     <number>0</number>
+    <property name="sizeConstraint">
+     <enum>QLayout::SetMaximumSize</enum>
     </property>
     <item>
-     <widget class="QListWidget" name="setting_list">
-      <item>
-       <property name="text">
-        <string>存储位置</string>
-       </property>
-      </item>
+     <widget class="QPushButton" name="file_button">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Maximum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>设定位置</string>
+      </property>
      </widget>
     </item>
     <item>
-     <widget class="QListWidget" name="content_list">
-      <item>
-       <property name="text">
-        <string>C:windows</string>
-       </property>
-      </item>
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string/>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
      </widget>
     </item>
    </layout>
-  </widget>
-  <widget class="QLCDNumber" name="lcdNumber">
-   <property name="geometry">
-    <rect>
-     <x>420</x>
-     <y>110</y>
-     <width>81</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="digitCount">
-    <number>6</number>
-   </property>
-   <property name="mode">
-    <enum>QLCDNumber::Dec</enum>
-   </property>
-   <property name="segmentStyle">
-    <enum>QLCDNumber::Flat</enum>
-   </property>
-   <property name="value" stdset="0">
-    <double>50.000000000000000</double>
-   </property>
   </widget>
  </widget>
  <resources/>

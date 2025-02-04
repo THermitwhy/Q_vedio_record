@@ -34,6 +34,7 @@ private:
     times time{0, 0, 0};
     record_start *record_vedio = nullptr;
     bool rec_button_flag = false;
+    bool rec_audio_flag = false;
     void setButtonIcons(QPushButton *button,QString iconName);
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;

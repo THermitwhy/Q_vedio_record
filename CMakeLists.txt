@@ -17,6 +17,8 @@ qt_add_resources(RESOURCES_RCC ${CMAKE_SOURCE_DIR}/icon.qrc)
 #set(TS_FILES vedio_rec_zh_CN.ts)
 
 set(PROJECT_SOURCES
+        global_config.h
+        global_config.cpp
         encodeAudio.h
         utils.hpp
         threadPool.hpp
@@ -36,7 +38,7 @@ set(PROJECT_SOURCES
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(q_vedio_rec
+    qt_add_executable(${PROJECT_NAME}
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
         ${RESOURCES_RCC}
@@ -67,14 +69,14 @@ include_directories("D:/lib/libyuv/include")
 target_link_directories(${PROJECT_NAME} PUBLIC "E:/soft/ffmpeg-master-latest-win64-gpl-shared/lib")
 target_link_directories(${PROJECT_NAME} PUBLIC "D:/lib/libyuv/Debug")
 target_link_libraries(${PROJECT_NAME} PUBLIC "avcodec.lib" "avdevice.lib" "swscale.lib" "avformat.lib" "avutil.lib" "yuv.lib")
-target_link_libraries(q_vedio_rec PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
-set_target_properties(q_vedio_rec PROPERTIES
+set_target_properties(${PROJECT_NAME} PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(q_vedio_rec)
+    qt_finalize_executable(${PROJECT_NAME})
 endif()

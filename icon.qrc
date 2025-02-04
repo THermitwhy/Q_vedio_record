@@ -7,5 +7,7 @@
         <file>icon/record1.png</file>
         <file>icon/stop1.png</file>
         <file>icon/setting1.png</file>
+        <file>icon/audio.png</file>
+        <file>icon/audio_free.png</file>
     </qresource>
 </RCC>

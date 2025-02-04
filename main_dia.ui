@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>500</width>
+    <width>553</width>
     <height>150</height>
    </rect>
   </property>
@@ -43,7 +43,7 @@ QPushButton::hover{
   <widget class="QPushButton" name="mic_button">
    <property name="geometry">
     <rect>
-     <x>320</x>
+     <x>420</x>
      <y>40</y>
      <width>70</width>
      <height>70</height>
@@ -98,10 +98,35 @@ QPushButton::hover{
     </rect>
    </property>
   </widget>
+  <widget class="QPushButton" name="audioc_button">
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>40</y>
+     <width>70</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+
+border-radius: 35px; 
+border: 0px groove gray;
+border-style: outset;
+}
+QPushButton::hover{
+	background-color: rgb(119, 136, 153);
+}</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
   <zorder>mic_button</zorder>
   <zorder>rec_button</zorder>
   <zorder>set_button</zorder>
   <zorder>lcdNumber</zorder>
+  <zorder>audioc_button</zorder>
  </widget>
  <resources/>
  <connections>

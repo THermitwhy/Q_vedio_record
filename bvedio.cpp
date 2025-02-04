@@ -239,7 +239,8 @@ int bvedio::loop()
 
 void bvedio::endLoop()
 {
+    delete sc;
     avcodec_free_context(&codec_ctx);
     avcodec_parameters_free(&this->codec_params);
-    avformat_free_context(format_ctx);
+    //avformat_free_context(format_ctx);
 }

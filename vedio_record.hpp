@@ -77,11 +77,19 @@ public:
         thread_pool->submit([&]() {
             video_thread->loop();
             });
+        if(recinfo){
         thread_pool->submit([&]() {
             audio_thread->loop();
-            });
+        });}
     }
-    ~record_start(){};
+    ~record_start(){
+        delete thread_pool;
+        //delete audio_thread;
+        delete video_thread;
+
+        avformat_free_context(format_ctx);
+
+    };
     void end_vedio_loop(){
         if(recinfo){
             vedio_stop.store(false);
