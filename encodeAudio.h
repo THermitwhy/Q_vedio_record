@@ -25,9 +25,12 @@ extern "C" {
 #include "libavutil/avutil.h"
 #include "libavutil/opt.h"
 }
-class audio_record {
+#include "vedio_meta.h"
+class audio_record :public vedio_meta
+{
 public:
-    audio_record(int sample_rate,AVFormatContext* format_ctx,AVStream* audio_stream) :sample_rate(sample_rate),audio_format(format_ctx), audio_stream(audio_stream){
+    audio_record(int sample_rate,AVFormatContext* format_ctx,AVStream* audio_stream) : vedio_meta(audio_stream,format_ctx),
+        sample_rate(sample_rate){
         init_audio();
     }
 
@@ -83,17 +86,17 @@ private:
             //std::cerr << "无法打开编码器" << std::endl;
             avcodec_free_context(&audio_codec_context);
             avcodec_parameters_free(&audio_par);
-            avformat_free_context(audio_format);
+            avformat_free_context(format_ctx);
             return;
             //throw std::runtime_error("无法打开编码器");
         }
 
         // 设置流的编解码器参数
-        if (avcodec_parameters_from_context(audio_stream->codecpar, audio_codec_context) < 0) {
+        if (avcodec_parameters_from_context(stream->codecpar, audio_codec_context) < 0) {
             //std::cerr << "无法设置流的编解码器参数" << std::endl;
             avcodec_free_context(&audio_codec_context);
             avcodec_parameters_free(&audio_par);
-            avformat_free_context(audio_format);
+            avformat_free_context(format_ctx);
             return;
             //throw std::runtime_error("无法设置流的编解码器参数");
         }
@@ -141,9 +144,9 @@ private:
                 return -1;
             }
             //audio_packet->time_base = {1,48000};
-            audio_packet->stream_index = this->audio_stream->index;
-            av_packet_rescale_ts(audio_packet, this->audio_codec_context->time_base, this->audio_stream->time_base);
-            av_interleaved_write_frame(audio_format, audio_packet);
+            audio_packet->stream_index = this->stream->index;
+            av_packet_rescale_ts(audio_packet, this->audio_codec_context->time_base, this->stream->time_base);
+            av_interleaved_write_frame(format_ctx, audio_packet);
         }
         return 1;
     }
@@ -160,14 +163,14 @@ private:
                 return -1;
             }
 
-            audio_packet->stream_index = this->audio_stream->index;
-            av_packet_rescale_ts(audio_packet, this->audio_codec_context->time_base, this->audio_stream->time_base);
-            av_interleaved_write_frame(audio_format, audio_packet);
+            audio_packet->stream_index = this->stream->index;
+            av_packet_rescale_ts(audio_packet, this->audio_codec_context->time_base, this->stream->time_base);
+            av_interleaved_write_frame(format_ctx, audio_packet);
         }
         return 1;
     }
-    AVStream* audio_stream;
-    AVFormatContext* audio_format;
+    //AVStream* audio_stream;
+    //AVFormatContext* audio_format;
     const AVCodec* audio_codec;
     AVCodecParameters* audio_par;
     AVCodecContext* audio_codec_context;

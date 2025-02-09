@@ -3,8 +3,8 @@
 #include <exception>
 #include <chrono>
 
-bvedio::bvedio(int fps, std::atomic<bool>& stop_flag, AVStream* stream, AVFormatContext* format_ctx) :
-    vedio_fps(fps), stop_flag(stop_flag), video_stream(stream), format_ctx(format_ctx)
+bvedio::bvedio(int fps, std::atomic<bool>& stop_flag, AVStream* stream, AVFormatContext* format_ctx) :vedio_meta(stream,format_ctx),
+    vedio_fps(fps), stop_flag(stop_flag)
 {
     hWnd = GetDesktopWindow();
     initRect();
@@ -22,7 +22,7 @@ bvedio::~bvedio()
 void bvedio::initHeader()
 {
 
-    video_stream->time_base = { 1, params.frame_rate };
+    stream->time_base = { 1, params.frame_rate };
     // 设置编解码器参数
     codec_params = avcodec_parameters_alloc();
     codec_params->codec_id = AV_CODEC_ID_H264;
@@ -75,7 +75,7 @@ void bvedio::initHeader()
     }
     //video_stream = avformat_new_stream(format_ctx, codec);
     // 设置流的编解码器参数
-    if (avcodec_parameters_from_context(video_stream->codecpar, codec_ctx) < 0) {
+    if (avcodec_parameters_from_context(stream->codecpar, codec_ctx) < 0) {
         //std::cerr << "无法设置流的编解码器参数" << std::endl;
         avcodec_free_context(&codec_ctx);
         avcodec_parameters_free(&codec_params);
@@ -177,7 +177,7 @@ int bvedio::loop()
         //pkt->time_base = codec_ctx->time_base;
         //av_packet_rescale_ts(pkt, this->codec_ctx->time_base, this->video_stream->time_base);
         while (avcodec_receive_packet(codec_ctx, pkt) == 0) {
-            av_packet_rescale_ts(pkt, this->codec_ctx->time_base, this->video_stream->time_base);
+            av_packet_rescale_ts(pkt, this->codec_ctx->time_base, this->stream->time_base);
             //std::cout << pkt->pts << std::endl;
             int ret = av_interleaved_write_frame(format_ctx, pkt);
             if (ret  < 0) {
@@ -212,7 +212,7 @@ int bvedio::loop()
     //pkt->time_base = codec_ctx->time_base;
     //av_packet_rescale_ts(pkt, this->codec_ctx->time_base, this->video_stream->time_base);
     while (avcodec_receive_packet(codec_ctx, pkt) == 0) {
-        av_packet_rescale_ts(pkt, this->codec_ctx->time_base, this->video_stream->time_base);
+        av_packet_rescale_ts(pkt, this->codec_ctx->time_base, this->stream->time_base);
         if (av_interleaved_write_frame(format_ctx, pkt) < 0) {
             //std::cerr << "无法写入编码数据到文件" << std::endl;
             throw std::runtime_error("无法写入编码数据到文件");

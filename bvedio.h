@@ -17,8 +17,8 @@ extern "C" {
 
 }
 
-
-class bvedio {
+#include "vedio_meta.h"
+class bvedio:public vedio_meta {
 public:
 	bvedio(int fps,std::atomic<bool>& stop_flag, AVStream* stream, AVFormatContext* format_ctx);
 	~bvedio();
@@ -35,9 +35,9 @@ public:
 	// 编解码器参数
 	AVCodecParameters* codec_params;
 	// 视频流
-	AVStream* video_stream;
+    //AVStream* video_stream;
 	// 输出格式
-	AVFormatContext* format_ctx = nullptr;
+    //AVFormatContext* format_ctx = nullptr;
 	// 文件头
 	AVDictionary* opt = nullptr;
 	//即时帧
