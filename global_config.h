@@ -8,7 +8,7 @@ private:
     global_config(){};
     ~global_config(){};
     //global_config& operator=(const global_config&);
-    QString dir;
+    QString dir="C:";
 public:
     static global_config& getinstance();
     void setDir(QString code);

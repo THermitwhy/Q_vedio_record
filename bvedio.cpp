@@ -8,6 +8,10 @@ bvedio::bvedio(int fps, std::atomic<bool>& stop_flag, AVStream* stream, AVFormat
 {
     hWnd = GetDesktopWindow();
     initRect();
+    y_stride = params.width;
+    u_stride = (params.width + 1) / 2;
+    v_stride = (params.width + 1) / 2;
+    yuv_data.resize(y_stride * params.height + u_stride * (params.height / 2) + v_stride * (params.height / 2),0);
     initHeader();
     //captureinstance = new capture_windows_instance(params.width, params.height, hWnd);
     sc = new ScreenCapture(params.width, params.height);
@@ -65,6 +69,8 @@ void bvedio::initHeader()
         throw std::runtime_error("无法将编码器参数复制到编码器上下文");
 
     }
+    codec_ctx->gop_size = 30; // 每 10 帧一个关键帧
+    codec_ctx->max_b_frames = 1; // 每个 GOP 中最多包含 1 个 B 帧
     codec_ctx->time_base = { 1, params.frame_rate };
     if (avcodec_open2(codec_ctx, codec, nullptr) < 0) {
         //std::cerr << "无法打开编码器" << std::endl;
@@ -121,10 +127,10 @@ int bvedio::loop()
 {
     //counts = counts * params.frame_rate;
     int frame_count = 0;
-    int y_stride = params.width;
-    int u_stride = (params.width + 1) / 2;
-    int v_stride = (params.width + 1) / 2;
-    uint8_t* yuv420 = new uint8_t[y_stride * params.height + u_stride * (params.height / 2) + v_stride * (params.height / 2)];
+//    int y_stride = params.width;
+//    int u_stride = (params.width + 1) / 2;
+//    int v_stride = (params.width + 1) / 2;
+    //uint8_t* yuv420 = new uint8_t[y_stride * params.height + u_stride * (params.height / 2) + v_stride * (params.height / 2)];
     std::vector<BYTE> buffer(params.width * params.height * 4);
     //int delay_time = 1000 / params.frame_rate;
     std::chrono::milliseconds delay_time(1000 / params.frame_rate);
@@ -140,16 +146,16 @@ int bvedio::loop()
         sc->Capture(buffer.data());
         libyuv::ARGBToI420(
             (const uint8_t*)buffer.data(), params.width*4,
-            yuv420, y_stride,
-            yuv420 + (y_stride * params.height), u_stride,
-            yuv420 + (y_stride * params.height) + (u_stride * (params.height / 2)), v_stride,
+            yuv_data.data(), y_stride,
+            yuv_data.data() + (y_stride * params.height), u_stride,
+            yuv_data.data() + (y_stride * params.height) + (u_stride * (params.height / 2)), v_stride,
             params.width, params.height
         );
 
         auto t1 = std::chrono::high_resolution_clock::now();
         auto duration1 = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - start);
         //std::cout << duration1.count() << std::endl;
-        convertYUVToAVFrame(yuv420, params.width, params.height, y_stride, u_stride, v_stride,current_frame);
+        convertYUVToAVFrame(yuv_data.data(), params.width, params.height, y_stride, u_stride, v_stride,current_frame);
         //std::cout << sizeof(yuv420) << std::endl;
         
         if (!current_frame) {
@@ -226,7 +232,7 @@ int bvedio::loop()
         av_packet_unref(pkt);
     }
     av_frame_free(&current_frame);
-    delete[] yuv420;
+    //delete[] yuv420;
     stop_flag.store(true);
     return 1;
 }

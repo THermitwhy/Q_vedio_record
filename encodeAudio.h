@@ -32,9 +32,10 @@ public:
     audio_record(int sample_rate,AVFormatContext* format_ctx,AVStream* audio_stream) : vedio_meta(audio_stream,format_ctx),
         sample_rate(sample_rate){
         init_audio();
+        //start;// = std::chrono::high_resolution_clock::now();
     }
 
-    int start_record(BYTE* buff, int len, BOOL done) {
+    int start_record(BYTE* buff, int len, BOOL done,std::chrono::steady_clock::time_point start) {
         int frame_count = audio_frame->nb_samples * av_get_bytes_per_sample(AV_SAMPLE_FMT_FLTP) * audio_frame->channels;
         memset(sample_data.data(), 0, sample_data.size());
         memset(sample_data2.data(), 0, sample_data2.size());
@@ -50,6 +51,8 @@ public:
 
             audio_frame->pts = pts;
             pts += audio_frame->nb_samples;
+            auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-start)/1000*audio_frame->sample_rate;
+            pts = pts>now.count()?pts:now.count();
             len = len - frame_count;
             encode();
             memset(sample_data.data(), 0, sample_data.size());
@@ -179,6 +182,7 @@ private:
     int sample_rate;
     std::vector<uint8_t> sample_data;
     std::vector<uint8_t> sample_data2;
+    //std::chrono::steady_clock::time_point start;// = std::chrono::high_resolution_clock::now();
     int pts = 0;
 
 };

@@ -7,6 +7,7 @@ rec_setting::rec_setting(QWidget *parent) :
     ui(new Ui::rec_setting)
 {
     ui->setupUi(this);
+    ui->label->setText(global_config::getinstance().getDir());
     connect(ui->file_button,&QPushButton::clicked,this,[&](){
         QString directory_name = QFileDialog::getExistingDirectory(nullptr, tr("Open Directory"),"C:",
         QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);

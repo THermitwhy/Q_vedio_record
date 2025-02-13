@@ -7,6 +7,7 @@
 #include <QTime>
 #include "rec_setting.h"
 #include "vedio_record.hpp"
+#include "threadPool.hpp"
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
 QT_END_NAMESPACE
@@ -25,6 +26,7 @@ public:
     ~Widget();
 
 private:
+    ThreadPool *thread_pool;
     QPoint inner_pos;
     bool mouse_pressed=false;
     Ui::Widget *ui;

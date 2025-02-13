@@ -53,6 +53,10 @@ public:
 		int time_count;
 	};
 	plane_param params;
+    int y_stride;// = params.width;
+    int u_stride;// = (params.width + 1) / 2;
+    int v_stride;// = (params.width + 1) / 2;
+    std::vector<BYTE> yuv_data;
 	void initHeader();
 	void initRect();
 	int loop();

@@ -26,8 +26,8 @@ enum REC_INFO{
 class record_start:public QObject{
         Q_OBJECT
 public:
-    record_start(){
-        thread_pool = new ThreadPool(2);
+    record_start(ThreadPool* thread_pool_){
+        thread_pool = thread_pool_;
     };
     void init_vedio_info(REC_INFO rec_info,QString vedio_name,int vedio_fps){
         this->vedio_name = vedio_name;
@@ -83,8 +83,11 @@ public:
         });}
     }
     ~record_start(){
-        delete thread_pool;
+        //delete thread_pool;
         //delete audio_thread;
+        if(recinfo){
+            delete audio_thread;
+        }
         delete video_thread;
 
         avformat_free_context(format_ctx);
@@ -99,6 +102,12 @@ public:
                 //std::cerr << "无法写入文件尾" << std::endl;
                 throw std::runtime_error("无法写入文件尾");
             }
+            //av_write_trailer(format_ctx); // 写入 moov 原子
+
+                // 关闭文件
+            if (format_ctx && !(format_ctx->oformat->flags & AVFMT_NOFILE)) {
+                avio_closep(&format_ctx->pb);
+                }
             return;
         }
         vedio_stop.store(false);
@@ -107,6 +116,9 @@ public:
             //std::cerr << "无法写入文件尾" << std::endl;
             throw std::runtime_error("无法写入文件尾");
         }
+        if (format_ctx && !(format_ctx->oformat->flags & AVFMT_NOFILE)) {
+            avio_closep(&format_ctx->pb);
+            }
     }
 
 private:

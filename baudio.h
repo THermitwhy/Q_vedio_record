@@ -140,6 +140,7 @@ public:
     void loop() {
         pAudioClient->Start();
         int sss = 0;
+        auto start = std::chrono::steady_clock::now();
         while (audio_stop.load()) {
             DWORD waitResult = WaitForSingleObject(hCaptureEvent, 500);  // 等待事件触发或超时
             //std::cout << "---" << std::endl;
@@ -181,7 +182,7 @@ public:
                     }
                 } while (packetSize>0);
                 
-                int len = rs->start_record(pMySink->audioBuffer.data(), pMySink->audioBuffer.size(), FALSE);
+                int len = rs->start_record(pMySink->audioBuffer.data(), pMySink->audioBuffer.size(), FALSE,start);
                 if (len < pMySink->audioBuffer.size()) {
                     pMySink->audioBuffer.erase(pMySink->audioBuffer.begin(), pMySink->audioBuffer.begin() + pMySink->audioBuffer.size() - len);
                 }
@@ -191,7 +192,7 @@ public:
                 //FillSilentFrames();  // 填充静音或处理其他操作
                 
                 pMySink->audioBuffer.insert(pMySink->audioBuffer.end(), silenceData.begin(), silenceData.end());
-                int len = rs->start_record(pMySink->audioBuffer.data(), pMySink->audioBuffer.size(), FALSE);
+                int len = rs->start_record(pMySink->audioBuffer.data(), pMySink->audioBuffer.size(), FALSE,start);
                 sss += 24000;
                 if (len < pMySink->audioBuffer.size()) {
                     pMySink->audioBuffer.erase(pMySink->audioBuffer.begin(), pMySink->audioBuffer.begin() + pMySink->audioBuffer.size() - len);

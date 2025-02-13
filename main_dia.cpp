@@ -7,6 +7,7 @@ Widget::Widget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::Widget)
 {
+    thread_pool = new ThreadPool(2);
     this->setWindowFlags(Qt::FramelessWindowHint);
     ui->setupUi(this);
     time_counter.setInterval(1000);
@@ -24,7 +25,7 @@ void Widget::setConnect(){
         if(!rec_button_flag){
             startTime = QTime::currentTime();
 
-            record_vedio = new record_start();
+            record_vedio = new record_start(thread_pool);
             record_vedio->init_vedio_info(rec_audio_flag?REC_INFO::vedio_with_audio:REC_INFO::only_vedio,
                                           global_config::getinstance().getDir()+"/"+QTime::currentTime().toString("hh_mm_ss")+".mp4",30);
             record_vedio->start_vedio_loop();
