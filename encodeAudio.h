@@ -25,12 +25,14 @@ extern "C" {
 #include "libavutil/avutil.h"
 #include "libavutil/opt.h"
 }
+#include "q_circle_buffer.hpp"
 #include "vedio_meta.h"
+#include "q_write_queue.hpp"
 class audio_record :public vedio_meta
 {
 public:
-    audio_record(int sample_rate,AVFormatContext* format_ctx,AVStream* audio_stream) : vedio_meta(audio_stream,format_ctx),
-        sample_rate(sample_rate){
+    audio_record(int sample_rate,AVFormatContext* format_ctx,AVStream* audio_stream, SafePacketQueue& queue) : vedio_meta(audio_stream,format_ctx),
+        sample_rate(sample_rate),queue(queue){
         init_audio();
         //start;// = std::chrono::high_resolution_clock::now();
     }
@@ -60,7 +62,10 @@ public:
         }
         return len;
     }
+    int record_loop(CircularBuffer<uint8_t>& buffer){
+            int sample_count = audio_frame->nb_samples;
 
+    }
     void end() {
         end_encode();
         //av_write_trailer(audio_format);
@@ -108,8 +113,7 @@ private:
 
 
         audio_frame = av_frame_alloc();
-        audio_packet = av_packet_alloc();
-
+        audio_packet = queue.getPacket();
 
         audio_frame->nb_samples = audio_codec_context->frame_size;
         audio_frame->format = audio_codec_context->sample_fmt;
@@ -149,7 +153,9 @@ private:
             //audio_packet->time_base = {1,48000};
             audio_packet->stream_index = this->stream->index;
             av_packet_rescale_ts(audio_packet, this->audio_codec_context->time_base, this->stream->time_base);
-            av_interleaved_write_frame(format_ctx, audio_packet);
+            queue.push(audio_packet);
+            audio_packet = queue.getPacket();
+            //av_interleaved_write_frame(format_ctx, audio_packet);
         }
         return 1;
     }
@@ -168,7 +174,8 @@ private:
 
             audio_packet->stream_index = this->stream->index;
             av_packet_rescale_ts(audio_packet, this->audio_codec_context->time_base, this->stream->time_base);
-            av_interleaved_write_frame(format_ctx, audio_packet);
+            queue.push(audio_packet);
+            audio_packet = queue.getPacket();
         }
         return 1;
     }
@@ -182,6 +189,7 @@ private:
     int sample_rate;
     std::vector<uint8_t> sample_data;
     std::vector<uint8_t> sample_data2;
+    SafePacketQueue &queue;
     //std::chrono::steady_clock::time_point start;// = std::chrono::high_resolution_clock::now();
     int pts = 0;
 

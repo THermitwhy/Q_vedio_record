@@ -4,6 +4,7 @@
 #include "threadPool.hpp"
 #include "bvedio.h"
 #include "baudio.h"
+#include "q_write_queue.hpp"
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -35,9 +36,10 @@ public:
         recinfo = rec_info;
         avformat_alloc_output_context2(&format_ctx, nullptr, nullptr, vedio_name.toStdString().c_str());
         vedio_stream = avformat_new_stream(format_ctx, NULL);
-
+        //vedio_queue = SafePacketQueue(10);
         if(rec_info){
             audio_stream = avformat_new_stream(format_ctx, NULL);
+            //audio_queue = SafePacketQueue(10);
         }
         init_instance();
         test_vedio_info();
@@ -47,11 +49,11 @@ public:
     void test_vedio_info(){
         if (!(format_ctx->oformat->flags & AVFMT_NOFILE)) {
             if (avio_open(&format_ctx->pb, this->vedio_name.toStdString().c_str(), AVIO_FLAG_WRITE) < 0) {
-                //std::cerr << "ÎÞ·¨´ò¿ªÊä³öÎÄ¼þ" << std::endl;
+                //std::cerr << "æ— æ³•æ‰“å¼€è¾“å‡ºæ–‡ä»¶" << std::endl;
                 //avcodec_free_context(&codec_ctx);
                 //avcodec_parameters_free(&codec_params);
                 avformat_free_context(format_ctx);
-                throw std::runtime_error("ÎÞ·¨´ò¿ªÊä³öÎÄ¼þ");
+                throw std::runtime_error("æ— æ³•æ‰“å¼€è¾“å‡ºæ–‡ä»¶");
             }
         }
     }
@@ -59,21 +61,24 @@ public:
         av_dict_set_int(&opt, "video_track_timescale", this->vedio_fps, 0);
             int ret = avformat_write_header(format_ctx, &opt);
             if (ret < 0) {
-                //std::cerr << "ÎÞ·¨Ð´ÈëÎÄ¼þÍ·" << std::endl;
+                //std::cerr << "æ— æ³•å†™å…¥æ–‡ä»¶å¤´" << std::endl;
                 //avcodec_free_context(&codec_ctx);
                 //avcodec_parameters_free(&codec_params);
                 avformat_free_context(format_ctx);
-                throw std::runtime_error("ÎÞ·¨Ð´ÈëÎÄ¼þÍ·");
+                throw std::runtime_error("æ— æ³•å†™å…¥æ–‡ä»¶å¤´");
             }
     }
     void init_instance(){
-        video_thread = new bvedio(this->vedio_fps, vedio_stop, vedio_stream, format_ctx);
+        video_thread = new bvedio(this->vedio_fps, vedio_stop, vedio_stream, format_ctx,vedio_queue);
         if(recinfo){
-            audio_thread = new rec_au(audio_stop, format_ctx, audio_stream);
+            audio_thread = new rec_au(audio_stop, format_ctx, audio_stream,audio_queue);
             audio_thread->init_device();
         }
     }
     void start_vedio_loop(){
+        thread_pool->submit([&](){
+            writeThread(format_ctx,vedio_queue,audio_queue,write_stop);
+        });
         thread_pool->submit([&]() {
             video_thread->loop();
             });
@@ -94,27 +99,44 @@ public:
 
     };
     void end_vedio_loop(){
-        if(recinfo){
-            vedio_stop.store(false);
-            audio_stop.store(false);
-            while (!vedio_stop.load() || !audio_stop.load()) {}
-            if (av_write_trailer(format_ctx) < 0) {
-                //std::cerr << "ÎÞ·¨Ð´ÈëÎÄ¼þÎ²" << std::endl;
-                throw std::runtime_error("ÎÞ·¨Ð´ÈëÎÄ¼þÎ²");
-            }
-            //av_write_trailer(format_ctx); // Ð´Èë moov Ô­×Ó
+//        if(recinfo){
+//            vedio_stop.store(false);
+//            audio_stop.store(false);
+//            while (!vedio_stop.load() || !audio_stop.load()) {}
+//            if (av_write_trailer(format_ctx) < 0) {
+//                //std::cerr << "æ— æ³•å†™å…¥æ–‡ä»¶å°¾" << std::endl;
+//                throw std::runtime_error("æ— æ³•å†™å…¥æ–‡ä»¶å°¾");
+//            }
+//            //av_write_trailer(format_ctx); // å†™å…¥ moov åŽŸå­
 
-                // ¹Ø±ÕÎÄ¼þ
-            if (format_ctx && !(format_ctx->oformat->flags & AVFMT_NOFILE)) {
-                avio_closep(&format_ctx->pb);
-                }
-            return;
-        }
+//                // å…³é—­æ–‡ä»¶
+//            if (format_ctx && !(format_ctx->oformat->flags & AVFMT_NOFILE)) {
+//                avio_closep(&format_ctx->pb);
+//                }
+//            return;
+//        }
+//        vedio_stop.store(false);
+//        while (!vedio_stop.load()) {}
         vedio_stop.store(false);
-        while (!vedio_stop.load()) {}
+        audio_stop.store(false);
+        //write_stop.store(false);
+        if(recinfo){
+        while(!vedio_queue.empty()||!audio_queue.empty()||!vedio_stop||!audio_stop){
+            auto a = vedio_queue.empty();
+            auto b = audio_queue.empty();
+            auto c = vedio_stop.load();
+            std::cout<<vedio_queue.empty()<<"--"<<audio_queue.empty()<<"--"<<vedio_stop<<std::endl;
+        }
+        }
+        else{
+            while(!vedio_queue.empty()||!audio_queue.empty()||!vedio_stop){
+                //std::cout<<vedio_queue.empty()<<"--"<<audio_queue.empty()<<"--"<<vedio_stop<<std::endl;
+            }
+        }
+        write_stop.store(false);
         if (av_write_trailer(format_ctx) < 0) {
-            //std::cerr << "ÎÞ·¨Ð´ÈëÎÄ¼þÎ²" << std::endl;
-            throw std::runtime_error("ÎÞ·¨Ð´ÈëÎÄ¼þÎ²");
+            //std::cerr << "æ— æ³•å†™å…¥æ–‡ä»¶å°¾" << std::endl;
+            throw std::runtime_error("æ— æ³•å†™å…¥æ–‡ä»¶å°¾");
         }
         if (format_ctx && !(format_ctx->oformat->flags & AVFMT_NOFILE)) {
             avio_closep(&format_ctx->pb);
@@ -134,6 +156,9 @@ private:
     rec_au* audio_thread;
     std::atomic<bool> vedio_stop = true;
     std::atomic<bool> audio_stop = true;
+    std::atomic<bool> write_stop = true;
+    SafePacketQueue vedio_queue = SafePacketQueue(100);
+    SafePacketQueue audio_queue= SafePacketQueue(100);
 };
 
 #endif // VEDIO_RECORD_HPP

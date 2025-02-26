@@ -7,7 +7,7 @@ Widget::Widget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::Widget)
 {
-    thread_pool = new ThreadPool(2);
+    thread_pool = new ThreadPool(3);
     this->setWindowFlags(Qt::FramelessWindowHint);
     ui->setupUi(this);
     time_counter.setInterval(1000);
@@ -92,9 +92,9 @@ void Widget::on_time_out(){
     int seconds = currentTime%60;
 
     QString timeDiffString = QString("%1:%2:%3")
-                .arg(hours, 2, 10, QLatin1Char('0')) // ²¹ÁãÊ¹Ğ¡Ê±ÖÁÉÙÁ½Î»
-                .arg(minutes, 2, 10, QLatin1Char('0')) // ²¹ÁãÊ¹·ÖÖÓÖÁÉÙÁ½Î»
-                .arg(seconds, 2, 10, QLatin1Char('0')); // ²¹ÁãÊ¹ÃëÖÁÉÙÁ½Î»
+                .arg(hours, 2, 10, QLatin1Char('0')) // è¡¥é›¶ä½¿å°æ—¶è‡³å°‘ä¸¤ä½
+                .arg(minutes, 2, 10, QLatin1Char('0')) // è¡¥é›¶ä½¿åˆ†é’Ÿè‡³å°‘ä¸¤ä½
+                .arg(seconds, 2, 10, QLatin1Char('0')); // è¡¥é›¶ä½¿ç§’è‡³å°‘ä¸¤ä½
     std::cout<<currentTime<<std::endl;;
     this->ui->lcdNumber->display(timeDiffString);
 }

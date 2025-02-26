@@ -17,7 +17,10 @@ qt_add_resources(RESOURCES_RCC ${CMAKE_SOURCE_DIR}/icon.qrc)
 #set(TS_FILES vedio_rec_zh_CN.ts)
 
 set(PROJECT_SOURCES
+        q_grab_windows.cpp
+        q_grab_windows.h
         q_circle_buffer.hpp
+        q_write_queue.hpp
         vedio_meta.h
         vedio_meta.cpp
         vedio_frame_chain.h

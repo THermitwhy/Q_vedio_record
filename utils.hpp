@@ -14,98 +14,8 @@ extern "C" {
 #include <libavutil/imgutils.h>
 
 }
-static double getScale() {//获取屏幕缩放
-    HWND hWnd = GetDesktopWindow();
-    HMONITOR hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
 
-    // 获取监视器逻辑宽度与高度
-    MONITORINFOEX miex;
-    miex.cbSize = sizeof(miex);
-    GetMonitorInfo(hMonitor, &miex);
-    int cxLogical = (miex.rcMonitor.right - miex.rcMonitor.left);
-    int cyLogical = (miex.rcMonitor.bottom - miex.rcMonitor.top);
-
-    // 获取监视器物理宽度与高度
-    DEVMODE dm;
-    dm.dmSize = sizeof(dm);
-    dm.dmDriverExtra = 0;
-    EnumDisplaySettings(miex.szDevice, ENUM_CURRENT_SETTINGS, &dm);
-    int cxPhysical = dm.dmPelsWidth;
-    int cyPhysical = dm.dmPelsHeight;
-
-    // 缩放比例计算  实际上使用任何一个即可
-    double horzScale = ((double)cxPhysical / (double)cxLogical);
-    double vertScale = ((double)cyPhysical / (double)cyLogical);
-    assert(horzScale - vertScale < 0.1); // 宽或高这个缩放值应该是相等的
-    return vertScale;
-}
-
-//static void CaptureScreenOrWindow(HWND hWnd, uint8_t* yuv420, int y_stride, int u_stride, int v_stride) {
-//    double scale = 1.5;
-//    HDC hdc = CreateDC("DISPLAY", NULL, NULL, NULL);
-//    if (!hdc) return;
-//
-//    uint32_t ScrWidth = 0, ScrHeight = 0;
-//    RECT rect = { 0 };
-//
-//    if (hWnd == NULL) {
-//        ScrWidth = GetDeviceCaps(hdc, HORZRES);
-//        ScrHeight = GetDeviceCaps(hdc, VERTRES);
-//    }
-//    else {
-//        GetWindowRect(hWnd, &rect);
-//        ScrWidth = static_cast<uint32_t>((rect.right - rect.left) * scale);
-//        ScrHeight = static_cast<uint32_t>((rect.bottom - rect.top) * scale);
-//    }
-//
-//    HDC hmdc = CreateCompatibleDC(hdc);
-//    if (!hmdc) {
-//        DeleteDC(hdc);
-//        return;
-//    }
-//
-//    HBITMAP hBmpScreen = CreateCompatibleBitmap(hdc, ScrWidth, ScrHeight);
-//    if (!hBmpScreen) {
-//        DeleteDC(hmdc);
-//        DeleteDC(hdc);
-//        return;
-//    }
-//
-//    HBITMAP holdbmp = (HBITMAP)SelectObject(hmdc, hBmpScreen);
-//
-//    BITMAP bm;
-//    GetObject(hBmpScreen, sizeof(bm), &bm);
-//
-//    BITMAPINFOHEADER bi = { 0 };
-//    bi.biSize = sizeof(BITMAPINFOHEADER);
-//    bi.biWidth = bm.bmWidth;
-//    bi.biHeight = bm.bmHeight;
-//    bi.biPlanes = bm.bmPlanes;
-//    bi.biBitCount = bm.bmBitsPixel;
-//    bi.biCompression = BI_RGB;
-//    bi.biSizeImage = bm.bmHeight * bm.bmWidthBytes;
-//
-//    char* buf = new char[bi.biSizeImage];
-//    if (buf) {
-//        BitBlt(hmdc, 0, 0, ScrWidth, ScrHeight, hdc, rect.left, rect.top, SRCCOPY);
-//        GetDIBits(hmdc, hBmpScreen, 0, (DWORD)ScrHeight, buf, (LPBITMAPINFO)&bi, DIB_RGB_COLORS);
-//        int rgb_stride = ScrWidth * 4;
-//        libyuv::ARGBToI420(
-//            (const uint8_t*)buf, rgb_stride,
-//            yuv420, y_stride,
-//            yuv420 + (y_stride * ScrHeight), u_stride,
-//            yuv420 + (y_stride * ScrHeight) + (u_stride * (ScrHeight / 2)), v_stride,
-//            ScrWidth, ScrHeight
-//        );
-//        delete[] buf;
-//    }
-//
-//    SelectObject(hmdc, holdbmp);
-//    DeleteObject(hBmpScreen);
-//    DeleteDC(hmdc);
-//    DeleteDC(hdc);
-//}
-
+#include "global_config.h"
 static int createAVFrame(int width, int height, AVFrame* &frame) {
     if (frame == nullptr) {
         frame = av_frame_alloc();
@@ -129,7 +39,7 @@ static int createAVFrame(int width, int height, AVFrame* &frame) {
 
     return 0;
 }
-static int convertYUVToAVFrame(uint8_t* yuv420, int width, int height, int y_stride, int u_stride, int v_stride, AVFrame* &frame) {
+ inline int convertYUVToAVFrame(uint8_t* yuv420, int width, int height, int y_stride, int u_stride, int v_stride, AVFrame* &frame) {
     if (frame == nullptr) {
         createAVFrame(width, height, frame);
     }
@@ -158,105 +68,58 @@ static int convertYUVToAVFrame(uint8_t* yuv420, int width, int height, int y_str
 
     return 0;
 }
-//
-//class capture_windows_instance {
-//public:
-//    capture_windows_instance(int p_width,int p_height, HWND &hWnd):hWnd(hWnd) {
-//        hdc = CreateDC("DISPLAY", NULL, NULL, NULL);
-//        hmdc = CreateCompatibleDC(hdc);
-//        get_srcrect();
-//        hBmpScreen = CreateCompatibleBitmap(hdc, ScrWidth, ScrHeight);
-//        y_stride = p_width;
-//        u_stride = (p_width + 1) / 2;
-//        v_stride = (p_width + 1) / 2;
-//        yuv420 = new uint8_t[y_stride * p_height + u_stride * (p_height / 2) + v_stride * (p_height / 2)];
-//    };
-//    int ruin() {
-//        DeleteObject(hBmpScreen);
-//        DeleteDC(hmdc);
-//        DeleteDC(hdc);
-//        delete[] buf;
-//    };
-//    double scale = 1.5;
-//    HWND hWnd;
-//    HDC hdc;
-//    HDC hmdc;
-//    HBITMAP hBmpScreen;
-//    RECT rect = { 0 };
-//    int y_stride, u_stride, v_stride;
-//    uint32_t ScrWidth = 0, ScrHeight = 0;
-//    uint8_t* yuv420 = nullptr;
-//    char* buf = nullptr;
-//    int get_srcrect() {
-//        
-//        if (hWnd == NULL) {
-//            ScrWidth = GetDeviceCaps(hdc, HORZRES);
-//            ScrHeight = GetDeviceCaps(hdc, VERTRES);
-//        }
-//        else {
-//            GetWindowRect(hWnd, &rect);
-//            ScrWidth = static_cast<uint32_t>((rect.right - rect.left) * scale);
-//            ScrHeight = static_cast<uint32_t>((rect.bottom - rect.top) * scale);
-//        }
-//        return 1;
+ inline void get_screen_size(int &x,int &y) {
+     x= GetSystemMetrics(SM_CXSCREEN);
+     y = GetSystemMetrics(SM_CYSCREEN);
+//     int w = GetSystemMetrics(SM_CXSCREEN);
+//     int h = GetSystemMetrics(SM_CYSCREEN);
+//     int zoom = GetDpiForWindow(GetDesktopWindow());
+//     switch (zoom)
+//     {
+//     case 96: x = w / (1/1); y = h / (1 / 1);
+//         break;
+//     case 120: x = w / (1 / 1.25); y = h / (1 / 1.25);
+//         break;
+//     case 144:x = w / (1 / 1.5); y = h / (1 / 1.5);
+//         break;
+//     case 192:x = w / (1 / 2); y = h / (1 / 2);
+//         break;
+//     }
+ }
+// inline AVCodecParameters* get_vedio_codec_params(){
+//    AVCodecParameters* codec_params;
+//    codec_params = avcodec_parameters_alloc();
+//    codec_params->codec_id = AV_CODEC_ID_H264;
+//    codec_params->codec_type = AVMEDIA_TYPE_VIDEO;
+//    codec_params->width = global_config::getinstance().get_random().width;
+//    codec_params->height = global_config::getinstance().get_random().height;
+//    codec_params->format = AV_PIX_FMT_YUV420P;
+//    codec_params->bit_rate = 12000000;
+//    codec_params->profile = FF_PROFILE_H264_BASELINE;
+//    codec_params->level = 41;
+
+//    return codec_params;
+// }
+
+//inline  AVCodecContext* get_vedio_codec_context(AVCodecParameters* params){
+//    const AVCodec* codec = avcodec_find_encoder(params->codec_id);
+//    AVCodecContext* context = avcodec_alloc_context3(codec);
+//    if (!context) {
+//        //std::cerr << "无法分配编码器上下文" << std::endl;
+//        throw std::runtime_error("无法分配编码器上下文");
 //    }
-//    int grab_windows() {
-//        auto start = std::chrono::high_resolution_clock::now();
-//        double scale = 1.5;
-//        //HDC hdc = CreateDC("DISPLAY", NULL, NULL, NULL);
-//        if (!hdc) return -1;
-//        if (!hmdc) {
-//            DeleteDC(hdc);
-//            return -1;
-//        }
-//
-//        //HBITMAP hBmpScreen = CreateCompatibleBitmap(hdc, ScrWidth, ScrHeight);
-//        if (!hBmpScreen) {
-//            DeleteDC(hmdc);
-//            DeleteDC(hdc);
-//            return -1;
-//        }
-//
-//        HBITMAP holdbmp = (HBITMAP)SelectObject(hmdc, hBmpScreen);
-//
-//        BITMAP bm;
-//        GetObject(hBmpScreen, sizeof(bm), &bm);
-//
-//        BITMAPINFOHEADER bi = { 0 };
-//        bi.biSize = sizeof(BITMAPINFOHEADER);
-//        bi.biWidth = bm.bmWidth;
-//        bi.biHeight = bm.bmHeight;
-//        bi.biPlanes = bm.bmPlanes;
-//        bi.biBitCount = bm.bmBitsPixel;
-//        bi.biCompression = BI_RGB;
-//        bi.biSizeImage = bm.bmHeight * bm.bmWidthBytes;
-//
-//        if (buf == nullptr) {
-//            buf = new char[bi.biSizeImage];
-//        }
-//
-//        if (buf) {
-//            BitBlt(hmdc, 0, 0, ScrWidth, ScrHeight, hdc, rect.left, rect.top, SRCCOPY);
-//            GetDIBits(hmdc, hBmpScreen, 0, (DWORD)ScrHeight, buf, (LPBITMAPINFO)&bi, DIB_RGB_COLORS);
-//            int rgb_stride = ScrWidth * 4;
-//            auto t1 = std::chrono::high_resolution_clock::now();
-//            auto duration1 = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - start);
-//            std::cout << duration1.count() << std::endl;
-//            
-//            libyuv::ARGBToI420(
-//                (const uint8_t*)buf, rgb_stride,
-//                yuv420, y_stride,
-//                yuv420 + (y_stride * ScrHeight), u_stride,
-//                yuv420 + (y_stride * ScrHeight) + (u_stride * (ScrHeight / 2)), v_stride,
-//                ScrWidth, ScrHeight
-//            );
-//
-//        }
-//
-//        SelectObject(hmdc, holdbmp);
-//        //DeleteObject(hBmpScreen);
-//        //DeleteDC(hmdc);
-//        //DeleteDC(hdc);
-//    };
-//};
+//    if (avcodec_parameters_to_context(context, params) < 0) {
+//        //std::cerr << "无法将编码器参数复制到编码器上下文" << std::endl;
+//        avcodec_free_context(&context);
+//        throw std::runtime_error("无法将编码器参数复制到编码器上下文");
+
+//    }
+//    return context;
+//}
+//inline void set_vedio_stream(AVCodecContext* context,AVStream* vedio_stream){
+//    if (avcodec_parameters_from_context(vedio_stream->codecpar, context) < 0) {
+//        //std::cerr << "无法设置流的编解码器参数" << std::endl;
+//        throw std::runtime_error("无法设置流的编解码器参数");
+//    }
+//}
 #endif

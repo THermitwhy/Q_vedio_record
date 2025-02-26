@@ -12,6 +12,7 @@
 #include <stdexcept>
 #include <fstream>
 #include "encodeAudio.h"
+#include "q_write_queue.hpp"
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -78,8 +79,8 @@ public:
             throw std::runtime_error("fail to create!");
         }
     }
-	rec_au(std::atomic<bool> &audio_stop,AVFormatContext* format_ctx, AVStream* audio_stream) :audio_stop(audio_stop){
-        rs = new audio_record(48000, format_ctx, audio_stream);
+    rec_au(std::atomic<bool> &audio_stop,AVFormatContext* format_ctx, AVStream* audio_stream, SafePacketQueue& queue) :audio_stop(audio_stop){
+        rs = new audio_record(48000, format_ctx, audio_stream,queue);
 	}
 	int init_device() {
         CoInitialize(NULL);
